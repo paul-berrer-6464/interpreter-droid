@@ -1,16 +1,17 @@
 # Stage 1: Build the React application
 FROM node:20-alpine AS build
 
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json to leverage Docker cache
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json from the 'frontend' subdirectory
+COPY frontend/package.json frontend/package-lock.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application source code
-COPY . .
+# Copy the rest of the application source code from the 'frontend' subdirectory
+COPY frontend/ .
 
 # Build the project for production
 RUN npm run build
@@ -21,8 +22,8 @@ FROM nginx:stable-alpine
 # Copy the build output from the 'build' stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy the custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy the custom Nginx configuration from the 'frontend' subdirectory
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80
