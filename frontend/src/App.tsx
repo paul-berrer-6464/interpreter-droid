@@ -7,6 +7,21 @@ const LANGUAGES = [
   { name: 'Latin', code: 'la' }
 ];
 
+const VOICES = [
+  { name: 'Default', code: 'default' },
+  { name: 'English Male', code: 'en-US-Standard-B' },
+  { name: 'English Female', code: 'en-US-Standard-C' },
+  { name: 'Italian Male', code: 'it-IT-Standard-D' },
+  { name: 'Italian Female', code: 'it-IT-Standard-A' },
+];
+
+const SPEEDS = [
+  { name: 'Slow', value: 0.75 },
+  { name: 'Normal', value: 1.0 },
+  { name: 'Fast', value: 1.25 },
+];
+
+
 export default function App() {
   // State
   const [sourceLang, setSourceLang] = useState('it');
@@ -16,6 +31,10 @@ export default function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [useVoiceIn, setUseVoiceIn] = useState(false);
   const [useVoiceOut, setUseVoiceOut] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState(VOICES[0].code);
+  const [playbackSpeed, setPlaybackSpeed] = useState(SPEEDS[1].value);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
 
   // Audio Recording Refs
   const mediaRecorder = useRef<MediaRecorder | null>(null);
@@ -57,17 +76,32 @@ export default function App() {
     const res = await fetch('http://localhost:5000/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: inputText, source: sourceLang, target: targetLang, voiceOut: useVoiceOut })
+      body: JSON.stringify({ 
+        text: inputText, 
+        source: sourceLang, 
+        target: targetLang, 
+        voiceOut: useVoiceOut,
+        voice: selectedVoice,
+        speed: playbackSpeed
+      })
     });
     const data = await res.json();
     setTranslatedText(data.translatedText);
     
     // Inside handleTranslate in App.tsx
-  if (useVoiceOut && data.audioUrl) {
-    // Adding ?t= + timestamp forces the browser to bypass the cache
-    const audio = new Audio(`http://localhost:5000${data.audioUrl}?t=${Date.now()}`);
-    audio.play();
-  }
+    if (useVoiceOut && data.audioUrl) {
+      const url = `http://localhost:5000${data.audioUrl}?t=${Date.now()}`;
+      setAudioUrl(url);
+      const audio = new Audio(url);
+      audio.play();
+    }
+  };
+
+  const handlePlayAudio = () => {
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
   };
 
   return (
@@ -101,6 +135,37 @@ export default function App() {
           </label>
         </div>
 
+        {/* Voice and Speed Controls */}
+        {useVoiceOut && (
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-bold mb-1">Voice:</label>
+              <select value={selectedVoice} onChange={(e) => setSelectedVoice(e.target.value)} className="w-full border p-2 rounded">
+                {VOICES.map(v => <option key={v.code} value={v.code}>{v.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1">Speed:</label>
+              <div className="flex rounded-md border border-gray-300">
+                {SPEEDS.map((s, idx) => (
+                    <button 
+                        key={s.name}
+                        onClick={() => setPlaybackSpeed(s.value)}
+                        className={`w-full p-2 text-sm transition-colors
+                          ${playbackSpeed === s.value ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}
+                          ${idx === 0 ? 'rounded-l-md' : ''}
+                          ${idx === SPEEDS.length - 1 ? 'rounded-r-md' : ''}
+                          ${idx !== SPEEDS.length - 1 ? 'border-r border-gray-300' : ''}
+                        `}
+                    >
+                        {s.name}
+                    </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Input Section */}
         <div className="mb-4">
           <textarea 
@@ -125,7 +190,14 @@ export default function App() {
 
         {/* Output Section */}
         <div className="bg-gray-50 p-4 rounded-lg border">
-          <p className="text-xs font-bold text-gray-500 mb-1 uppercase">Translation:</p>
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-xs font-bold text-gray-500 mb-1 uppercase">Translation:</p>
+            {audioUrl && useVoiceOut && (
+              <button onClick={handlePlayAudio} className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold hover:bg-blue-600 transition shadow">
+                &#9658; Play
+              </button>
+            )}
+          </div>
           <p className="text-lg text-gray-800">{translatedText || "Waiting for input..."}</p>
         </div>
       </div>

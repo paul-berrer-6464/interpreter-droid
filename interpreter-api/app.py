@@ -1,4 +1,5 @@
 import os
+import html
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from google.cloud import translate_v2 as translate
@@ -23,17 +24,32 @@ def handle_translate():
     
     # 1. Translate Text
     result = translate_client.translate(text, target_language=target)
-    translated_text = result['translatedText']
+    translated_text = html.unescape(result['translatedText'])
     
     response = {"translatedText": translated_text}
 
     # 2. If Voice Out is requested, generate audio
     if data.get('voiceOut'):
         synthesis_input = texttospeech.SynthesisInput(text=translated_text)
-        voice = texttospeech.VoiceSelectionParams(
-            language_code=target, ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+        
+        voice_name = data.get('voice')
+        speed = data.get('speed', 1.0)
+
+        voice_selection_params = {
+            "language_code": target
+        }
+        
+        if voice_name and voice_name != 'default':
+            voice_selection_params["name"] = voice_name
+        else:
+            voice_selection_params["ssml_gender"] = texttospeech.SsmlVoiceGender.NEUTRAL
+
+        voice = texttospeech.VoiceSelectionParams(**voice_selection_params)
+        
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.MP3,
+            speaking_rate=float(speed)
         )
-        audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
         
         tts_response = tts_client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config
