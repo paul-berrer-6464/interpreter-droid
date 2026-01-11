@@ -90,4 +90,8 @@ def handle_transcribe():
     return jsonify({"text": transcript})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Cloud Run dynamically assigns a port, default to 5000 for local dev
+    port = int(os.environ.get("PORT", 5000))
+    # '0.0.0.0' tells Flask to listen to all public requests, not just localhost
+    # debug=False is safer for production
+    app.run(host='0.0.0.0', port=port, debug=False)
