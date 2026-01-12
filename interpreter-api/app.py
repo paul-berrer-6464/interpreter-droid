@@ -9,15 +9,21 @@ from google.cloud import texttospeech
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'keys.json'
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {
+    "origins": "*", 
+    "methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"]
+}})
 
 # Initialize Clients
 translate_client = translate.Client()
 speech_client = speech.SpeechClient()
 tts_client = texttospeech.TextToSpeechClient()
 
-@app.route('/translate', methods=['POST'])
+@app.route('/translate', methods=['POST', 'OPTIONS'])
 def handle_translate():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.json
     text = data.get('text')
     target = data.get('target')
@@ -67,8 +73,10 @@ def handle_translate():
 def get_audio():
     return send_file("output.mp3", mimetype="audio/mp3")
 
-@app.route('/transcribe', methods=['POST'])
+@app.route('/transcribe', methods=['POST', 'OPTIONS'])
 def handle_transcribe():
+    if request.method == 'OPTIONS':
+        return '', 200
     if 'audio' not in request.files:
         return jsonify({"error": "No audio file"}), 400
     
