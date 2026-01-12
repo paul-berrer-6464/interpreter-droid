@@ -11,7 +11,7 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 # Copy the rest of the application source code from the 'frontend' subdirectory
-COPY frontend/ .
+COPY . .
 
 # Build the project for production
 RUN npm run build
