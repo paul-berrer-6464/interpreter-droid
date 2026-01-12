@@ -66,14 +66,14 @@ export default function App() {
     formData.append('audio', blob);
     formData.append('lang', sourceLang);
 
-    const res = await fetch('http://localhost:5000/transcribe', { method: 'POST', body: formData });
+    const res = await fetch('https://interpreter-droid-120472993668.us-east4.run.app//transcribe', { method: 'POST', body: formData });
     const data = await res.json();
     setInputText(data.text); // Put transcribed text into the box
   };
 
   // --- Translation Logic ---
   const handleTranslate = async () => {
-    const res = await fetch('http://localhost:5000/translate', {
+    const res = await fetch('https://interpreter-droid-120472993668.us-east4.run.app/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -90,7 +90,7 @@ export default function App() {
     
     // Inside handleTranslate in App.tsx
     if (useVoiceOut && data.audioUrl) {
-      const url = `http://localhost:5000${data.audioUrl}?t=${Date.now()}`;
+      const url = `https://interpreter-droid-120472993668.us-east4.run.app/${data.audioUrl}?t=${Date.now()}`;
       setAudioUrl(url);
       const audio = new Audio(url);
       audio.play();
