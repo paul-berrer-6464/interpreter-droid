@@ -20,7 +20,7 @@ translate_client = translate.Client()
 speech_client = speech.SpeechClient()
 tts_client = texttospeech.TextToSpeechClient()
 
-@app.route('/translate', methods=['POST', 'OPTIONS'])
+@app.route('/translate/', methods=['POST', 'OPTIONS'])
 def handle_translate():
     if request.method == 'OPTIONS':
         return '', 200
@@ -73,7 +73,7 @@ def handle_translate():
 def get_audio():
     return send_file("output.mp3", mimetype="audio/mp3")
 
-@app.route('/transcribe', methods=['POST', 'OPTIONS'])
+@app.route('/transcribe/', methods=['POST', 'OPTIONS'])
 def handle_transcribe():
     if request.method == 'OPTIONS':
         return '', 200
