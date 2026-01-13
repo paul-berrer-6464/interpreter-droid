@@ -6,7 +6,7 @@ from google.cloud import translate_v2 as translate
 from google.cloud import speech
 from google.cloud import texttospeech
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'keys.json'
+#os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'keys.json'
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
